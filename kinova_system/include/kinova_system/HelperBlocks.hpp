@@ -3,7 +3,6 @@
  * @file
  **/
 #pragma once
-#include "rclcpp/rclcpp.hpp"
 #include "kinova_system/BaseBlock.hpp"
 #include "kinova_system/Port/InputPort.hpp"
 #include "kinova_system/Port/OutputPort.hpp"

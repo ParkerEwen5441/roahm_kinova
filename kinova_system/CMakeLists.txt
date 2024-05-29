@@ -21,9 +21,6 @@ set(SOURCE_FILES
     src/System.cpp
 )
 
-# Find ROS 2 package
-find_package(rclcpp REQUIRED)
-
 # Add library
 add_library(${PROJECT_NAME} ${SOURCE_FILES})
 
