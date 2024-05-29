@@ -1,0 +1,8 @@
+#+title: roahm_dynamics
+Rigid body dynamics and controller package.
+
+* Components
++ [[./include/kinova_dynamics/Model.hpp][Model]] - robot descriptions
++ [[./include/kinova_dynamics/Parser.hpp][Parser]] - parser for robot model
++ [[./include/kinova_dynamics/RNEA.hpp][RNEA]] - Inverse Dynamics Algorithm
++ [[./include/kinova_dynamics/ControllerBlock.hpp][ControllerBlock]] - Implementations of controllers
