@@ -37,6 +37,7 @@ void ControllerBlock::run()
     {
         // retrieving values
         auto state = state_port->get_new<Measurement>();
+
         VectorXd pdes, vdes, ades;
         auto traj = get_desired(pdes, vdes, ades, state->timestamp);
 
@@ -65,6 +66,7 @@ void ControllerBlock::run()
                          state->vel, e,    ed,        dt};
         ctrl.control = dynamics(inputs);
         ctrl.is_gripper_open = traj->is_gripper_open;
+
         // update output
         ctrl.frame_id = state->frame_id + 1;
         default_output->set<ControlMsg>(ctrl);
@@ -181,6 +183,87 @@ std::shared_ptr<const msgs::AccTrajectory> ControllerBlock::get_desired(
     }
 
     return traj;
+}
+
+
+void ControllerBlock::set_trajectories(
+    std::deque<std::shared_ptr<const AccTrajectory>> trajs)
+{
+    trajectories = trajs;
+}
+
+std::shared_ptr<const msgs::AccTrajectory> ControllerBlock::get_desired_csv(
+    VectorXd &pdes, VectorXd &vdes, VectorXd &ades,
+    decltype(std::chrono::system_clock::now()) t)
+{
+    using namespace std::chrono_literals;
+
+    // check validity of the first trajectory
+    {
+        const double t_rel =
+            std::chrono::duration_cast<std::chrono::microseconds>(t - t0)
+                .count() /
+            1e6; // time passed
+
+        while (!trajectories.empty())
+        {
+            auto first_traj = trajectories.front();
+            // not yet reached? NOTE: this should only happen if planner has
+            // error
+            if (t_rel < first_traj->start_time)
+            {
+                throw std::runtime_error(
+                    "Planner Error: Oldest trajectory still in the future!");
+            }
+
+            // expired?
+            else if (t_rel > (first_traj->duration + first_traj->start_time))
+            {
+                trajectories.pop_front();
+            }
+
+            // passed the check!
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    // fetch valid trajectory
+    if (trajectories.empty())
+    {
+        throw std::runtime_error("Planner Error: no new trajectories!");
+    }
+
+    // get desired trajectory
+    auto traj = trajectories.front();
+    const double t_rel =
+        std::chrono::duration_cast<std::chrono::microseconds>(t - t0).count() /
+            1e6 -
+        traj->start_time; // time passes since start time
+
+    // handle based on traj type difference
+    if (traj->is_bernstein)
+    {
+        pdes = Helper::bernstein_q_des(traj->pos, traj->vel, traj->acc, traj->k,
+                                       t_rel, traj->trajectory_duration);
+        vdes =
+            Helper::bernstein_qd_des(traj->pos, traj->vel, traj->acc, traj->k,
+                                     t_rel, traj->trajectory_duration);
+        ades =
+            Helper::bernstein_qdd_des(traj->pos, traj->vel, traj->acc, traj->k,
+                                      t_rel, traj->trajectory_duration);
+    }
+    else
+    {
+        ades = traj->acc;
+        vdes = ades * t_rel + traj->vel;
+        pdes = (vdes + traj->vel) * t_rel / 2 + traj->pos;
+    }
+
+    return traj;
+
 }
 } // namespace Dynamics
 } // namespace Roahm

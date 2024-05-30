@@ -579,11 +579,10 @@ Roahm::Model::SpatialModel<double> Roahm::Model::Parser::parse_urdf(
     }
     return rob;
 }
-#else
-/// throw not implemented error
-Roahm::Model::SpatialModel<double> Roahm::Model::Parser::
-    parse_urdf([[maybe_unused]] const std::string &urdf_path)
-{
-    throw std::runtime_error("URDF Support not built");
-}
-#endif
+// #else
+// /// throw not implemented error
+// Roahm::Model::SpatialModel<double> Roahm::Model::Parser::parse_urdf([[maybe_unused]] const std::string &urdf_path)
+// {
+//     throw std::runtime_error("URDF Support not built");
+// }
+// #endif

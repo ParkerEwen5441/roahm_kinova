@@ -31,6 +31,8 @@ class ControllerBlock : public ::Roahm::System::BaseBlock
      **/
     virtual Eigen::VectorXd dynamics(const InputPack &inputs) = 0;
 
+    void set_trajectories(std::deque<std::shared_ptr<const AccTrajectory>>);
+
   protected:
     /**
      * @brief Ctor to be called by derived class
@@ -77,6 +79,10 @@ class ControllerBlock : public ::Roahm::System::BaseBlock
      * @param t: current timestamp
      **/
     std::shared_ptr<const AccTrajectory> get_desired(
+        VectorXd &pdes, VectorXd &vdes, VectorXd &ades,
+        decltype(std::chrono::system_clock::now()) t);
+
+    std::shared_ptr<const msgs::AccTrajectory> get_desired_csv(
         VectorXd &pdes, VectorXd &vdes, VectorXd &ades,
         decltype(std::chrono::system_clock::now()) t);
 
